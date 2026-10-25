@@ -1,0 +1,60 @@
+:root{--blue:#1f5fbf;--red:#c0392b;--ink:#1d2330;--mute:#6b7280;--line:#e5e7eb;--bg:#f6f7f9}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1040px;margin:0 auto;padding:max(16px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) 32px max(14px,env(safe-area-inset-left))}
+h1{font-size:1.7rem;line-height:1.2;margin:.4em 0 .3em}
+h2{font-size:1.15rem;margin:0 0 .6em}
+.lede{margin:.2em 0 .8em;color:#374151}
+.targets{list-style:none;padding:0;margin:0 0 1em;display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.95rem}
+.targets .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:1px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.legend button{font:inherit;font-size:.88rem;border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;cursor:pointer;color:var(--ink)}
+.legend button i{display:inline-block;width:18px;height:4px;border-radius:2px;margin-right:7px;vertical-align:3px}
+.legend button[aria-pressed=false]{opacity:.4;text-decoration:line-through}
+.chart{position:relative;width:100%;touch-action:pan-y}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart img{width:100%;height:auto}
+.tip{position:absolute;pointer-events:none;background:rgba(29,35,48,.94);color:#fff;font-size:.8rem;line-height:1.35;padding:6px 9px;border-radius:8px;white-space:nowrap;transform:translate(-50%,calc(-100% - 12px));opacity:0;transition:opacity .12s}
+.tip.on{opacity:1}
+.key{font-size:.82rem;color:var(--mute);margin:.6em 0 0}
+.key span{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:0;margin-right:3px}
+.k-pred{border:2px solid var(--blue);background:#fff}
+.k-hit{background:var(--blue)}
+.k-miss{border:2.5px solid var(--blue);background:#fff;width:11px!important;height:11px!important}
+.note{background:#eef4ff;border-radius:10px;padding:10px 12px;margin:12px 0 0;font-size:.95rem}
+.fine{font-size:.82rem;color:var(--mute);margin:.6em 0 0}
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.sess{border-collapse:collapse;width:100%;font-size:.9rem}
+.sess th{font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;color:var(--mute);text-align:left;font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.sess td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.sess td[data-l=Departure] b,.sess td[data-l=Outside],.sess td[data-l=Snow],.sess td[data-l="Lead time"],.sess td[data-l=Started]{white-space:nowrap}
+.sess .sub{display:block;font-size:.8rem;color:var(--mute)}
+.sess tr.muted td{color:#9ca3af}
+.sess tr.muted b{color:#9ca3af}
+.pill{display:inline-block;font-size:.78rem;font-weight:600;border-radius:999px;padding:1px 9px;white-space:nowrap}
+.pill.up{background:#e6efff;color:var(--blue)}.pill.live{background:#fff4d6;color:#8a5a00}
+.pill.ok{background:#e3f6e8;color:#1b7a3a}.pill.bad{background:#fde8e6;color:var(--red)}
+.pill.muted{background:#f1f2f4;color:#6b7280;text-decoration:none}
+tr.muted td:not([data-l=Status]):not([data-l=Departure]){text-decoration:line-through;text-decoration-color:#d1d5db}
+footer{color:var(--mute);font-size:.85rem;text-align:center;margin-top:18px}
+@media (max-width:700px){
+  h1{font-size:1.4rem}
+  .card{padding:13px;border-radius:12px}
+  table.sess thead{display:none}
+  table.sess,table.sess tbody,table.sess tr,table.sess td{display:block;width:100%}
+  table.sess tr{border:1px solid var(--line);border-radius:10px;margin:0 0 10px;padding:6px 10px;display:grid;grid-template-columns:repeat(3,1fr);column-gap:10px}
+  table.sess td{border:0;padding:4px 0}
+  table.sess td::before{content:attr(data-l);display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mute)}
+  table.sess td[data-l=Departure]{grid-column:1/-1;font-size:1rem}
+  table.sess td[data-l=Departure]::before{display:none}
+  table.sess td[data-l=Departure] .sub{display:inline;margin-left:6px;font-size:.95rem;color:var(--ink)}
+}
+@media (prefers-color-scheme:dark){
+  :root{--ink:#e7e9ee;--mute:#9aa3b2;--line:#2b313c;--bg:#0f1115}
+  .card,.legend button{background:#171a21}
+  .lede{color:#c9ced8}
+  .note{background:#16233b}
+  .k-pred,.k-miss{background:#171a21}
+}
