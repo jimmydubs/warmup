@@ -58,3 +58,6 @@ footer{color:var(--mute);font-size:.85rem;text-align:center;margin-top:18px}
   .note{background:#16233b}
   .k-pred,.k-miss{background:#171a21}
 }
+.sess tr.next td{background:#f3f7ff;border-top:2px solid var(--blue)}
+.sess tr.none td{color:#6b7280;font-style:italic}
+@media (prefers-color-scheme:dark){.sess tr.next td{background:rgba(31,95,191,.16)}}
