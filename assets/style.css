@@ -61,3 +61,5 @@ footer{color:var(--mute);font-size:.85rem;text-align:center;margin-top:18px}
 .sess tr.next td{background:#f3f7ff;border-top:2px solid var(--blue)}
 .sess tr.none td{color:#6b7280;font-style:italic}
 @media (prefers-color-scheme:dark){.sess tr.next td{background:rgba(31,95,191,.16)}}
+.sess tr.soon td{background:#fafbfd}
+@media (prefers-color-scheme:dark){.sess tr.soon td{background:rgba(255,255,255,.03)}}
