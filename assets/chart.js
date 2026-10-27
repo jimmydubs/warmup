@@ -89,7 +89,8 @@
         txt(layer, X(p.x) + 8, Y(p.y) + 4, p.y, { fill: c, "font-weight": 700, "font-size": fs, "paint-order": "stroke",
           stroke: "#fff", "stroke-width": 3 });
         hits.push({ x: X(p.x), y: Y(p.y), html: "<b>" + p.date + "</b> · " + NAMES[s] + "<br>" + p.x + " °C · " +
-          (p.hit ? "reached target in " + p.y + " min" : "not at target after " + p.y + " min") });
+          (p.hit ? "at " + (p.target || "target") + (p.target ? " °C" : "") + " by the " + p.y + "-min check"
+                 : "didn't reach " + (p.target ? p.target + " °C" : "target") + " in " + p.y + " min") });
       });
     });
     box.appendChild(tip);
