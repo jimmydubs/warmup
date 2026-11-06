@@ -42,17 +42,21 @@
     box.innerHTML = "";
     var svg = el("svg", { viewBox: "0 0 " + W + " " + H, width: W, height: H, "font-size": fs,
       "font-family": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" }, box);
-    var ink = getComputedStyle(document.body).color;
+    var cs = getComputedStyle(document.body);
+    var ink = cs.color;
+    var surface = (cs.getPropertyValue("--card") || "").trim() || "#171a21";
+    var isDark = document.documentElement.getAttribute("data-theme") !== "light";
+    var bandA = isDark ? .12 : .07, bandB = isDark ? .14 : .08;
 
     // target bands
-    el("rect", { x: X(-40), y: m.t, width: X(15) - X(-40), height: H - m.t - m.b, fill: "#1f5fbf", "fill-opacity": .07 }, svg);
-    el("rect", { x: X(25), y: m.t, width: X(40) - X(25), height: H - m.t - m.b, fill: "#c0392b", "fill-opacity": .08 }, svg);
+    el("rect", { x: X(-40), y: m.t, width: X(15) - X(-40), height: H - m.t - m.b, fill: "#1f5fbf", "fill-opacity": bandA }, svg);
+    el("rect", { x: X(25), y: m.t, width: X(40) - X(25), height: H - m.t - m.b, fill: "#c0392b", "fill-opacity": bandB }, svg);
     txt(svg, X(-40) + 5, m.t - 8, "Target 19 °C", { fill: "#1f5fbf", "font-size": fs });
     if (!narrow) txt(svg, X(20), m.t - 8, "21 °C", { fill: ink, opacity: .6, "text-anchor": "middle", "font-size": fs });
     txt(svg, X(40), m.t - 8, narrow ? "20.5 °C" : "Cool to 20.5 °C", { fill: "#c0392b", "text-anchor": "end", "font-size": fs });
 
     // grid + axes
-    var g = el("g", { stroke: ink, "stroke-opacity": .12 }, svg);
+    var g = el("g", { stroke: ink, "stroke-opacity": isDark ? .18 : .12 }, svg);
     for (var y = 0; y <= ymax; y += 10) {
       el("line", { x1: m.l, x2: W - m.r, y1: Y(y), y2: Y(y) }, g);
       txt(svg, m.l - 6, Y(y) + 4, y, { "text-anchor": "end", fill: ink, opacity: .7 });
@@ -75,19 +79,19 @@
       el("path", { d: path(D.pred_smooth[s], X, Y), fill: "none", stroke: c, "stroke-width": 2, "stroke-dasharray": "6 5",
         "stroke-opacity": .8, "stroke-linecap": "round" }, layer);
       D.pred[s].forEach(function (p) {
-        el("circle", { cx: X(p[0]), cy: Y(p[1]), r: narrow ? 3 : 3.6, fill: "#fff", stroke: c, "stroke-width": 1.6 }, layer);
+        el("circle", { cx: X(p[0]), cy: Y(p[1]), r: narrow ? 3 : 3.6, fill: surface, stroke: c, "stroke-width": 1.6 }, layer);
         if (!narrow || p[0] % 10 === 0)
           txt(layer, X(p[0]), Y(p[1]) - 7, p[1], { "text-anchor": "middle", fill: c, "font-size": fs - 1, "paint-order": "stroke",
-            stroke: "#fff", "stroke-width": 3, "stroke-opacity": .8 });
+            stroke: surface, "stroke-width": 3, "stroke-opacity": .9 });
         hits.push({ x: X(p[0]), y: Y(p[1]), html: "<b>Predicted</b> · " + NAMES[s] + "<br>" + p[0] + " °C → " + p[1] + " min" + (p[2] === "cool" ? " (cool-down)" : "") });
       });
       // trend from actual trips
       if (D.trend[s] && D.trend[s].length > 1)
         el("path", { d: path(D.trend[s], X, Y), fill: "none", stroke: c, "stroke-width": 3, "stroke-linecap": "round" }, layer);
       D.actual[s].forEach(function (p) {
-        el("circle", { cx: X(p.x), cy: Y(p.y), r: 5.5, fill: p.hit ? c : "#fff", stroke: c, "stroke-width": p.hit ? 1.5 : 2.5 }, layer);
+        el("circle", { cx: X(p.x), cy: Y(p.y), r: 5.5, fill: p.hit ? c : surface, stroke: c, "stroke-width": p.hit ? 1.5 : 2.5 }, layer);
         txt(layer, X(p.x) + 8, Y(p.y) + 4, p.y, { fill: c, "font-weight": 700, "font-size": fs, "paint-order": "stroke",
-          stroke: "#fff", "stroke-width": 3 });
+          stroke: surface, "stroke-width": 3 });
         hits.push({ x: X(p.x), y: Y(p.y), html: "<b>" + p.date + "</b> · " + NAMES[s] + "<br>" + p.x + " °C · " +
           (p.hit ? "at " + (p.target || "target") + (p.target ? " °C" : "") + " by the " + p.y + "-min check"
                  : "didn't reach " + (p.target ? p.target + " °C" : "target") + " in " + p.y + " min") });
@@ -119,5 +123,6 @@
   });
   var last = 0;
   window.addEventListener("resize", function () { if (box.clientWidth !== last) { last = box.clientWidth; draw(); } });
+  window.addEventListener("evie-theme", function () { draw(); });
   last = box.clientWidth; draw();
 })();
