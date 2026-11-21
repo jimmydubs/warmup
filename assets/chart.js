@@ -1,4 +1,7 @@
-/* Evie warm-up chart: self-contained, no external libraries. Data comes from #evie-data. */
+/* Evie warm-up chart, styled like the "Evie warm-up calibration" report:
+   -20..+20 °C, 0..50 min, dashed predicted lines (no dots), solid actual trend,
+   filled circle = reached target (minutes to target), hollow square = didn't reach (">" lead).
+   Self-contained, no external libraries. Data comes from #evie-data. Theme-aware (dark default). */
 (function () {
   "use strict";
   var D = JSON.parse(document.getElementById("evie-data").textContent);
@@ -6,7 +9,7 @@
   var NS = "http://www.w3.org/2000/svg";
   var hidden = {};
   var NAMES = { dry: "5 cm of snow or less", snow: "More than 5 cm of fresh snow" };
-  var XMIN = -40, XMAX = 40;
+  var X0 = -20, X1 = 20, Y0 = 0, Y1 = 50;
 
   function el(name, attrs, parent) {
     var e = document.createElementNS(NS, name);
@@ -18,8 +21,9 @@
     var t = el("text", Object.assign({ x: x, y: y }, attrs || {}), parent);
     t.textContent = s; return t;
   }
+  function clip(pts) { return pts.filter(function (p) { return p[0] >= X0 - 1e-9 && p[0] <= X1 + 1e-9; }); }
   function path(pts, X, Y) {
-    return pts.map(function (p, i) { return (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1); }).join("");
+    return pts.map(function (p, i) { return (i ? "L" : "M") + X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1); }).join(" ");
   }
 
   var tip = document.createElement("div"); tip.className = "tip";
@@ -27,81 +31,74 @@
   function draw() {
     var W = Math.max(300, box.clientWidth);
     var narrow = W < 560;
-    var H = Math.round(Math.min(460, Math.max(300, W * (narrow ? 0.82 : 0.56))));
-    var m = { l: narrow ? 34 : 50, r: narrow ? 8 : 14, t: 26, b: narrow ? 38 : 44 };
-    var fs = narrow ? 10 : 12.5;
-    var all = [];
-    ["dry", "snow"].forEach(function (s) {
-      D.pred[s].forEach(function (p) { all.push(p[1]); });
-      D.actual[s].forEach(function (p) { all.push(p.y); });
-    });
-    var ymax = Math.max(50, Math.ceil((Math.max.apply(null, all) + 4) / 10) * 10);
-    var X = function (x) { return m.l + (x - XMIN) / (XMAX - XMIN) * (W - m.l - m.r); };
-    var Y = function (y) { return H - m.b - y / ymax * (H - m.t - m.b); };
+    var H = Math.round(W * (narrow ? 0.78 : 440 / 760));
+    var m = { l: narrow ? 40 : 56, r: narrow ? 10 : 20, t: 20, b: narrow ? 44 : 52 };
+    var fs = narrow ? 10 : 11;
+    var X = function (x) { return m.l + (x - X0) / (X1 - X0) * (W - m.l - m.r); };
+    var Y = function (y) { return H - m.b - (y - Y0) / (Y1 - Y0) * (H - m.t - m.b); };
+
+    var isDark = document.documentElement.getAttribute("data-theme") !== "light";
+    var cs = getComputedStyle(document.documentElement);
+    var v = function (n, d) { return (cs.getPropertyValue(n) || "").trim() || d; };
+    var surface = v("--chart-bg", isDark ? "#11141a" : "#ffffff");
+    var grid = v("--chart-grid", isDark ? "#232a35" : "#f0f0f0");
+    var tick = v("--chart-tick", isDark ? "#9aa3b2" : "#666666");
+    var axis = v("--chart-axis", isDark ? "#c9ced8" : "#444444");
+    var col = { dry: v("--chart-dry", D.colors.dry), snow: v("--chart-snow", D.colors.snow) };
 
     box.innerHTML = "";
     var svg = el("svg", { viewBox: "0 0 " + W + " " + H, width: W, height: H, "font-size": fs,
-      "font-family": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" }, box);
-    var cs = getComputedStyle(document.body);
-    var ink = cs.color;
-    var surface = (cs.getPropertyValue("--card") || "").trim() || "#171a21";
-    var isDark = document.documentElement.getAttribute("data-theme") !== "light";
-    var bandA = isDark ? .12 : .07, bandB = isDark ? .14 : .08;
+      "font-family": "system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif", class: "chart-svg" }, box);
+    el("rect", { x: 0, y: 0, width: W, height: H, fill: surface }, svg);
 
-    // target bands
-    el("rect", { x: X(-40), y: m.t, width: X(15) - X(-40), height: H - m.t - m.b, fill: "#1f5fbf", "fill-opacity": bandA }, svg);
-    el("rect", { x: X(25), y: m.t, width: X(40) - X(25), height: H - m.t - m.b, fill: "#c0392b", "fill-opacity": bandB }, svg);
-    txt(svg, X(-40) + 5, m.t - 8, "Target 19 °C", { fill: "#1f5fbf", "font-size": fs });
-    if (!narrow) txt(svg, X(20), m.t - 8, "21 °C", { fill: ink, opacity: .6, "text-anchor": "middle", "font-size": fs });
-    txt(svg, X(40), m.t - 8, narrow ? "20.5 °C" : "Cool to 20.5 °C", { fill: "#c0392b", "text-anchor": "end", "font-size": fs });
-
-    // grid + axes
-    var g = el("g", { stroke: ink, "stroke-opacity": isDark ? .18 : .12 }, svg);
-    for (var y = 0; y <= ymax; y += 10) {
-      el("line", { x1: m.l, x2: W - m.r, y1: Y(y), y2: Y(y) }, g);
-      txt(svg, m.l - 6, Y(y) + 4, y, { "text-anchor": "end", fill: ink, opacity: .7 });
+    for (var x = X0; x <= X1; x += 5) {
+      el("line", { x1: X(x), x2: X(x), y1: m.t, y2: H - m.b, stroke: grid }, svg);
+      txt(svg, X(x), H - m.b + 18, x, { "text-anchor": "middle", fill: tick });
     }
-    for (var x = XMIN; x <= XMAX; x += 10) {
-      el("line", { x1: X(x), x2: X(x), y1: m.t, y2: H - m.b }, g);
-      txt(svg, X(x), H - m.b + 15, (x > 0 ? "+" : "") + x, { "text-anchor": "middle", fill: ink, opacity: .7 });
+    for (var y = Y0; y <= Y1; y += 10) {
+      el("line", { x1: m.l, x2: W - m.r, y1: Y(y), y2: Y(y), stroke: grid }, svg);
+      txt(svg, m.l - 8, Y(y) + 4, y, { "text-anchor": "end", fill: tick });
     }
-    el("line", { x1: m.l, x2: W - m.r, y1: Y(0), y2: Y(0), stroke: ink, "stroke-opacity": .35 }, svg);
-    txt(svg, (m.l + W - m.r) / 2, H - 6, "Outside temperature (°C)", { "text-anchor": "middle", fill: ink, opacity: .85 });
-    var yl = txt(svg, 0, 0, narrow ? "Minutes" : "Warm-up lead time (minutes)", { "text-anchor": "middle", fill: ink, opacity: .85,
-      transform: "translate(" + (narrow ? 10 : 13) + "," + ((m.t + H - m.b) / 2) + ") rotate(-90)" });
+    txt(svg, (m.l + W - m.r) / 2, H - 10, "Outside temperature (°C)", { "text-anchor": "middle", fill: axis, "font-size": fs + 1 });
+    var cy = (m.t + H - m.b) / 2;
+    txt(svg, 14, cy, narrow ? "Minutes" : "Warm-up time (minutes)", { "text-anchor": "middle", fill: axis, "font-size": fs + 1,
+      transform: "rotate(-90 14 " + cy + ")" });
 
     var hits = [];
+    // predicted dashed lines first (behind), then trends, then dots, like the report
     ["dry", "snow"].forEach(function (s) {
       if (hidden[s]) return;
-      var c = D.colors[s];
-      var layer = el("g", {}, svg);
-      // predicted: dashed smooth line + labelled dots
-      el("path", { d: path(D.pred_smooth[s], X, Y), fill: "none", stroke: c, "stroke-width": 2, "stroke-dasharray": "6 5",
-        "stroke-opacity": .8, "stroke-linecap": "round" }, layer);
+      el("path", { d: path(clip(D.pred_smooth[s]), X, Y), fill: "none", stroke: col[s], "stroke-width": 1.5,
+        "stroke-dasharray": "6 4", opacity: 0.7 }, svg);
       D.pred[s].forEach(function (p) {
-        el("circle", { cx: X(p[0]), cy: Y(p[1]), r: narrow ? 3 : 3.6, fill: surface, stroke: c, "stroke-width": 1.6 }, layer);
-        if (!narrow || p[0] % 10 === 0)
-          txt(layer, X(p[0]), Y(p[1]) - 7, p[1], { "text-anchor": "middle", fill: c, "font-size": fs - 1, "paint-order": "stroke",
-            stroke: surface, "stroke-width": 3, "stroke-opacity": .9 });
+        if (p[0] < X0 || p[0] > X1) return;
         hits.push({ x: X(p[0]), y: Y(p[1]), html: "<b>Predicted</b> · " + NAMES[s] + "<br>" + p[0] + " °C → " + p[1] + " min" + (p[2] === "cool" ? " (cool-down)" : "") });
       });
-      // trend from actual trips
-      if (D.trend[s] && D.trend[s].length > 1)
-        el("path", { d: path(D.trend[s], X, Y), fill: "none", stroke: c, "stroke-width": 3, "stroke-linecap": "round" }, layer);
+    });
+    ["dry", "snow"].forEach(function (s) {
+      if (hidden[s]) return;
+      var tr = clip(D.trend[s] || []);
+      if (tr.length > 1) el("path", { d: path(tr, X, Y), fill: "none", stroke: col[s], "stroke-width": 2.5 }, svg);
+    });
+    ["dry", "snow"].forEach(function (s) {
+      if (hidden[s]) return;
+      var c = col[s];
       D.actual[s].forEach(function (p) {
-        el("circle", { cx: X(p.x), cy: Y(p.y), r: 5.5, fill: p.hit ? c : surface, stroke: c, "stroke-width": p.hit ? 1.5 : 2.5 }, layer);
-        txt(layer, X(p.x) + 8, Y(p.y) + 4, p.y, { fill: c, "font-weight": 700, "font-size": fs, "paint-order": "stroke",
-          stroke: surface, "stroke-width": 3 });
-        hits.push({ x: X(p.x), y: Y(p.y), html: "<b>" + p.date + "</b> · " + NAMES[s] + "<br>" + p.x + " °C · " +
-          (p.hit ? "at " + (p.target || "target") + (p.target ? " °C" : "") + " by the " + p.y + "-min check"
-                 : "didn't reach " + (p.target ? p.target + " °C" : "target") + " in " + p.y + " min") });
+        var px = X(Math.max(X0, Math.min(X1, p.x))), py = Y(Math.max(Y0, Math.min(Y1, p.y)));
+        if (p.hit) el("circle", { cx: px, cy: py, r: 5, fill: c }, svg);
+        else el("rect", { x: px - 5, y: py - 5, width: 10, height: 10, fill: surface, stroke: c, "stroke-width": 2 }, svg);
+        txt(svg, px + 7, py - 7, (p.hit ? "" : ">") + p.y, { fill: c, "paint-order": "stroke", stroke: surface,
+          "stroke-width": 3, "stroke-linejoin": "round" });
+        hits.push({ x: px, y: py, html: "<b>" + p.date + "</b> · " + NAMES[s] + "<br>" + p.x + " °C · " +
+          (p.hit ? "reached " + (p.target ? p.target + " °C" : "target") + " in " + p.y + " min"
+                 : "didn't reach " + (p.target ? p.target + " °C" : "target") + " in the " + p.y + "-min lead") });
       });
     });
     box.appendChild(tip);
 
     function near(ev) {
       var r = svg.getBoundingClientRect(), k = W / r.width;
-      var px = (ev.clientX - r.left) * k, py = (ev.clientY - r.top) * k, best = null, bd = 26 * k;
+      var px = (ev.clientX - r.left) * k, py = (ev.clientY - r.top) * k, best = null, bd = 22 * k;
       hits.forEach(function (h) { var d = Math.hypot(h.x - px, h.y - py); if (d < bd) { bd = d; best = h; } });
       if (best) {
         tip.innerHTML = best.html; tip.classList.add("on");
