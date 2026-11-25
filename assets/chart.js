@@ -93,11 +93,17 @@
         "stroke-dasharray": "6 4", opacity: 0.7 }, svg);
       var kind = ((D.pred_kind || {})[s]) || "rules";
       var fit = (D.fit || {})[s] || {};
-      var label = kind === "fit" ? "Fitted time-to-target" : "Starting rules";
+      var label = kind === "fit" ? "Fitted time-to-target"
+        : kind === "fit_plus_allowance" ? "Fitted no-snow + snow allowance"
+        : "Starting rules";
       (D.pred[s] || []).forEach(function (p) {
         if (p[0] < X0 || p[0] > X1) return;
         var extra = "";
         if (kind === "fit" && fit.formula) extra = "<br>" + fit.formula + " min, n=" + fit.n + ", R²=" + fit.r2;
+        if (kind === "fit_plus_allowance") {
+          extra = "<br>not yet fitted; no &gt;5 cm sessions";
+          if (fit.allowance_min != null) extra += " (+" + fit.allowance_min + " min)";
+        }
         if (p[2] === "cool") extra += " (cool-down)";
         hits.push({ x: X(p[0]), y: Y(p[1]), html: "<b>" + label + "</b> · " + NAMES[s] + "<br>" + p[0] + " °C → " + p[1] + " min" + extra });
       });
