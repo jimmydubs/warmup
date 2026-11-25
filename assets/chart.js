@@ -27,6 +27,13 @@
   function path(pts, X, Y) {
     return pts.map(function (p, i) { return (i ? "L" : "M") + X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1); }).join(" ");
   }
+  function bandPath(band, X, Y) {
+    var pts = clip(band);
+    if (pts.length < 2) return "";
+    var lo = pts.map(function (p) { return [p[0], p[1]]; });
+    var hi = pts.map(function (p) { return [p[0], p[2]]; }).reverse();
+    return path(lo, X, Y) + " " + path(hi, X, Y).replace(/^M/, "L") + " Z";
+  }
   function axisY(svg, m, H, Y, fs, tick, axis, surface, narrow) {
     el("rect", { x: 0, y: 0, width: m.l, height: H, fill: surface }, svg);
     for (var y = Y0; y <= Y1; y += 10)
@@ -79,11 +86,20 @@
     var hits = [];
     ["dry", "snow"].forEach(function (s) {
       if (hidden[s]) return;
-      el("path", { d: path(clip(D.pred_smooth[s]), X, Y), fill: "none", stroke: col[s], "stroke-width": 1.5,
+      var band = ((D.pred_band || {})[s]) || [];
+      var bd = bandPath(band, X, Y);
+      if (bd) el("path", { d: bd, fill: col[s], "fill-opacity": "0.18", stroke: "none" }, svg);
+      el("path", { d: path(clip(D.pred_smooth[s] || []), X, Y), fill: "none", stroke: col[s], "stroke-width": 1.5,
         "stroke-dasharray": "6 4", opacity: 0.7 }, svg);
-      D.pred[s].forEach(function (p) {
+      var kind = ((D.pred_kind || {})[s]) || "rules";
+      var fit = (D.fit || {})[s] || {};
+      var label = kind === "fit" ? "Fitted time-to-target" : "Starting rules";
+      (D.pred[s] || []).forEach(function (p) {
         if (p[0] < X0 || p[0] > X1) return;
-        hits.push({ x: X(p[0]), y: Y(p[1]), html: "<b>Predicted</b> · " + NAMES[s] + "<br>" + p[0] + " °C → " + p[1] + " min" + (p[2] === "cool" ? " (cool-down)" : "") });
+        var extra = "";
+        if (kind === "fit" && fit.formula) extra = "<br>" + fit.formula + " min, n=" + fit.n + ", R²=" + fit.r2;
+        if (p[2] === "cool") extra += " (cool-down)";
+        hits.push({ x: X(p[0]), y: Y(p[1]), html: "<b>" + label + "</b> · " + NAMES[s] + "<br>" + p[0] + " °C → " + p[1] + " min" + extra });
       });
     });
     ["dry", "snow"].forEach(function (s) {
