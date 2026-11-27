@@ -67,7 +67,8 @@
     var col = { dry: v("--chart-dry", D.colors.dry), snow: v("--chart-snow", D.colors.snow) };
     var miss = v("--chart-miss", isDark ? "#f0c674" : "#c49214");
     var missStroke = v("--chart-miss-stroke", isDark ? "#d4a017" : "#8a6a00");
-    var rHit = 2.5, rMiss = 2.5;
+    var outlier = v("--chart-outlier", isDark ? "#9aa3b2" : "#9ca3af");
+    var rHit = 2.5, rMiss = 2.5, rOut = 3.2;
 
     box.innerHTML = "";
     var svg = el("svg", { viewBox: "0 0 " + W + " " + H, width: W, height: H, "font-size": fs,
@@ -118,12 +119,18 @@
       var c = col[s];
       D.actual[s].forEach(function (p) {
         var px = X(Math.max(X0, Math.min(X1, p.x))), py = Y(Math.max(Y0, Math.min(Y1, p.y)));
-        if (p.hit) el("circle", { cx: px, cy: py, r: rHit, fill: c }, svg);
+        if (p.outlier) {
+          if (p.hit) el("circle", { cx: px, cy: py, r: rOut, fill: "none", stroke: outlier, "stroke-width": 1.2 }, svg);
+          else el("rect", { x: px - rOut, y: py - rOut, width: rOut * 2, height: rOut * 2,
+            fill: "none", stroke: outlier, "stroke-width": 1.2 }, svg);
+        } else if (p.hit) el("circle", { cx: px, cy: py, r: rHit, fill: c }, svg);
         else el("rect", { x: px - rMiss, y: py - rMiss, width: rMiss * 2, height: rMiss * 2,
           fill: miss, stroke: missStroke, "stroke-width": 0.8 }, svg);
-        hits.push({ x: px, y: py, html: "<b>" + p.date + "</b> · " + NAMES[s] + "<br>" + p.x + " °C · " +
-          (p.hit ? "reached " + (p.target ? p.target + " °C" : "target") + " in " + p.y + " min"
-                 : "didn't reach " + (p.target ? p.target + " °C" : "target") + " in the " + p.y + "-min lead") });
+        var body = p.hit
+          ? "reached " + (p.target ? p.target + " °C" : "target") + " in " + p.y + " min"
+          : "didn't reach " + (p.target ? p.target + " °C" : "target") + " in the " + p.y + "-min lead";
+        if (p.outlier) body += "<br>outlier, not used in the fit or trend";
+        hits.push({ x: px, y: py, html: "<b>" + p.date + "</b> · " + NAMES[s] + "<br>" + p.x + " °C · " + body });
       });
     });
     box.appendChild(tip);

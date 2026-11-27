@@ -5,14 +5,14 @@
   --pill-live-ink:#f0c674;--pill-ok-bg:#16351f;--pill-ok-ink:#6fcf97;--pill-bad-bg:#3a1a17;
   --pill-muted-bg:#22262e;--next-bg:rgba(31,95,191,.16);--soon-bg:rgba(255,255,255,.03);
   --muted-row:#7a8494;--theme-btn-bg:#1c212b;
-  --chart-bg:#11141a;--chart-grid:#232a35;--chart-tick:#9aa3b2;--chart-axis:#c9ced8;--chart-dry:#5b8fe0;--chart-snow:#e0675a;--chart-miss:#f0c674;--chart-miss-stroke:#d4a017
+  --chart-bg:#11141a;--chart-grid:#232a35;--chart-tick:#9aa3b2;--chart-axis:#c9ced8;--chart-dry:#5b8fe0;--chart-snow:#e0675a;--chart-miss:#f0c674;--chart-miss-stroke:#d4a017;--chart-outlier:#9aa3b2
 }
 [data-theme=light]{
   --ink:#1d2330;--mute:#6b7280;--line:#e5e7eb;--bg:#f6f7f9;--card:#fff;--lede:#374151;
   --note-bg:#eef4ff;--pill-up-bg:#e6efff;--pill-live-bg:#fff4d6;--pill-live-ink:#8a5a00;
   --pill-ok-bg:#e3f6e8;--pill-ok-ink:#1b7a3a;--pill-bad-bg:#fde8e6;--pill-muted-bg:#f1f2f4;
   --next-bg:#f3f7ff;--soon-bg:#fafbfd;--muted-row:#9ca3af;--theme-btn-bg:#fff;
-  --chart-bg:#fff;--chart-grid:#f0f0f0;--chart-tick:#666;--chart-axis:#444;--chart-dry:#1f5fbf;--chart-snow:#c0392b;--chart-miss:#c49214;--chart-miss-stroke:#8a6a00
+  --chart-bg:#fff;--chart-grid:#f0f0f0;--chart-tick:#666;--chart-axis:#444;--chart-dry:#1f5fbf;--chart-snow:#c0392b;--chart-miss:#c49214;--chart-miss-stroke:#8a6a00;--chart-outlier:#9ca3af
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;color-scheme:dark;overflow-x:hidden}
@@ -44,7 +44,7 @@ h2{font-size:1.15rem;margin:0 0 .6em}
 .chart svg.chart-svg{display:block;width:auto;height:auto;border:0;border-radius:0;vertical-align:top}
 .chart-scroll svg.chart-y{position:sticky;left:0;z-index:2;pointer-events:none;display:block}
 .ckey{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--mute);margin:.6em 0 0}
-.ckey .d{color:var(--chart-dry)}.ckey .s{color:var(--chart-snow)}.ckey .m{color:var(--chart-miss)}
+.ckey .d{color:var(--chart-dry)}.ckey .s{color:var(--chart-snow)}.ckey .m{color:var(--chart-miss)}.ckey .o{color:var(--chart-outlier)}
 .chart img{width:130%;height:auto;max-width:none;display:block}
 .tip{position:absolute;pointer-events:none;background:rgba(29,35,48,.94);color:#fff;font-size:.8rem;line-height:1.35;padding:6px 9px;border-radius:8px;white-space:nowrap;transform:translate(-50%,calc(-100% - 12px));opacity:0;transition:opacity .12s}
 [data-theme=light] .tip{background:rgba(29,35,48,.94)}
